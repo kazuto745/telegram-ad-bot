@@ -1,4 +1,4 @@
-import asyncio
+import os
 import time
 from telegram import Update
 from telegram.ext import (
@@ -9,10 +9,9 @@ from telegram.ext import (
     filters,
 )
 
-TOKEN = "8523746541:AAG3f4Y5EdpCV3Yy_mNxI5EufvTb6sjjjaU"
+TOKEN = os.getenv("BOT_TOKEN")
 
 COOLDOWN = 30 * 60
-
 last_ads = {}
 
 AD_KEYWORDS = [
@@ -26,13 +25,10 @@ AD_KEYWORDS = [
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
-        "✅ United Escrow Ads Bot Online"
-    )
+    await update.message.reply_text("✅ United Escrow Ads Bot Online")
 
 
 async def check_ads(update: Update, context: ContextTypes.DEFAULT_TYPE):
-
     if not update.message:
         return
 
@@ -59,6 +55,7 @@ async def check_ads(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     now = time.time()
+
     if user.id in last_ads:
         remaining = COOLDOWN - (now - last_ads[user.id])
 
@@ -71,17 +68,12 @@ async def check_ads(update: Update, context: ContextTypes.DEFAULT_TYPE):
             mins = int(remaining // 60)
 
             try:
-                msg = await context.bot.send_message(
-                    chat_id=chat.id,
-                    text=f"⏳ {user.first_name}, please wait {mins} minute(s) before posting another advertisement."
+                await context.bot.send_message(
+                    chat.id,
+                    f"⏳ {user.first_name}, wait {mins} minute(s) before posting another advertisement."
                 )
-
-                await asyncio.sleep(10)
-                await msg.delete()
-
             except:
                 pass
-
             return
 
     last_ads[user.id] = now
@@ -90,13 +82,9 @@ async def check_ads(update: Update, context: ContextTypes.DEFAULT_TYPE):
 app = Application.builder().token(TOKEN).build()
 
 app.add_handler(CommandHandler("start", start))
-
 app.add_handler(
     MessageHandler(
-        filters.TEXT
-        | filters.PHOTO
-        | filters.VIDEO
-        | filters.Document.ALL,
+        filters.TEXT | filters.PHOTO | filters.VIDEO | filters.Document.ALL,
         check_ads,
     )
 )
