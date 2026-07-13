@@ -1,5 +1,7 @@
 import os
 import time
+import asyncio
+
 from telegram import Update
 from telegram.ext import (
     Application,
@@ -60,6 +62,7 @@ async def check_ads(update: Update, context: ContextTypes.DEFAULT_TYPE):
         remaining = COOLDOWN - (now - last_ads[user.id])
 
         if remaining > 0:
+
             try:
                 await update.message.delete()
             except:
@@ -68,12 +71,21 @@ async def check_ads(update: Update, context: ContextTypes.DEFAULT_TYPE):
             mins = int(remaining // 60)
 
             try:
-                await context.bot.send_message(
+                warning = await context.bot.send_message(
                     chat.id,
                     f"⏳ {user.first_name}, wait {mins} minute(s) before posting another advertisement."
                 )
+
+                await asyncio.sleep(10)
+
+                try:
+                    await warning.delete()
+                except:
+                    pass
+
             except:
                 pass
+
             return
 
     last_ads[user.id] = now
@@ -82,6 +94,7 @@ async def check_ads(update: Update, context: ContextTypes.DEFAULT_TYPE):
 app = Application.builder().token(TOKEN).build()
 
 app.add_handler(CommandHandler("start", start))
+
 app.add_handler(
     MessageHandler(
         filters.TEXT | filters.PHOTO | filters.VIDEO | filters.Document.ALL,
